@@ -6,6 +6,7 @@ class AwaleBoard:
             'A': 4, 'B': 4, 'C': 4, 'D': 4, 'E': 4, 'F': 4,
             'G': 4, 'H': 4, 'I': 4, 'J': 4, 'K': 4, 'L': 4
         }
+        self.cases = list(self.board.keys())
     
     def display(self):
         """
@@ -23,6 +24,41 @@ class AwaleBoard:
         """
         return all(value == 0 for value in self.board.values())
 
+    def next_case(self, current_case, reverse=False):
+        index = self.cases.index(current_case)
+        if reverse:
+            return self.cases[(index - 1) % len(self.cases)]
+        else:
+            return self.cases[(index + 1) % len(self.cases)]
+    
+    def saw(self, start_case):
+        seeds = self.board[start_case]
+        if seeds == 0:
+            raise ValueError("La case de départ est vide, impossible de semer.")
+
+        self.board[start_case] = 0
+        current_case = start_case
+
+        while seeds > 0:
+            current_case = self.next_case(current_case)
+            self.board[current_case] += 1
+            seeds -= 1
+
+    def harvest(self, start_case, Player):
+        total_seeds = 0
+        current_case = start_case
+
+        while True:
+            seeds = self.board[current_case]
+            if seeds == 0:
+                break
+            total_seeds += seeds
+            self.board[current_case] = 0
+            current_case = self.next_case(current_case, reverse=True)
+
+        Player.increment_score(total_seeds)
+        return total_seeds
+
 class Player:
     def __init__(self, name):
         self.name = name
@@ -38,34 +74,26 @@ class Player:
 
 # Initialisation du plateau
 plateau = AwaleBoard()
-
-# Affichage initial
-plateau.display()
-
-# Vérification si le plateau est vide
-print("Le plateau est-il vide ?", plateau.isEmpty())
-
-# Simulation : vider toutes les cases
-for case in plateau.board:
-    plateau.board[case] = 0
-
-# Affichage après vidage
-plateau.display()
-print("Le plateau est-il vide ?", plateau.isEmpty())
-
-# Création des joueurs
 player1 = Player("Alice")
 player2 = Player("Bob")
 
-# Afficher leurs scores initiaux
-print(player1)
-print(player2)
+# Affichage initial
+print("Etat initial du plateau :")
+plateau.display()
 
-# Incrémenter les score
-player1.increment_score(4)
-player2.increment_score(6)
+# Semer pour le joueur 1
+print("Alice sème à partir de la case 'B':")
+plateau.saw('B')
+plateau.display()
 
-# Afficher les scores après incrémentation
+# Récolter pour le joueur 2
+print("Bob récolte à partir de la case 'H':")
+graines_recoltees = plateau.harvest('H', player2)
+print(f"Graines récoltées par Bob : {graines_recoltees}")
+plateau.display()
+
+# Affichage des scores des joueurs
+print("Scores des joueurs :")
 print(player1)
 print(player2)
 
